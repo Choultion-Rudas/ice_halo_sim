@@ -18,7 +18,7 @@ ObjectPool<T>::~ObjectPool() {
 
 template <typename T>
 void ObjectPool<T>::Clear() {
-  next_unused_id_ = 0;
+  next_obj_id_ = 0;
   current_chunk_id_ = 0;
   deserialized_chunk_size_ = 0;
 }
@@ -81,7 +81,7 @@ template <typename T>
 void ObjectPool<T>::Map(std::function<void(T&)> f) {
   const std::lock_guard<std::mutex> lock(id_mutex_);
   for (const auto& chunk : objects_) {
-    size_t chunk_size = (chunk == objects_.back() ? next_unused_id_.load() : kChunkSize);
+    size_t chunk_size = (chunk == objects_.back() ? next_obj_id_.load() : kChunkSize);
     for (size_t j = 0; j < chunk_size; j++) {
       f(chunk[j]);
     }
@@ -97,7 +97,7 @@ ObjectPool<T>* ObjectPool<T>::GetInstance() {
 
 
 template <typename T>
-ObjectPool<T>::ObjectPool() : current_chunk_id_(0), next_unused_id_(0), deserialized_chunk_size_(0) {
+ObjectPool<T>::ObjectPool() : current_chunk_id_(0), next_obj_id_(0), deserialized_chunk_size_(0) {
   auto* pool = new T[kChunkSize];
   objects_.emplace_back(pool);
 }
@@ -105,10 +105,10 @@ ObjectPool<T>::ObjectPool() : current_chunk_id_(0), next_unused_id_(0), deserial
 
 template <typename T>
 uint32_t ObjectPool<T>::RefreshChunkIndex() {
-  auto id = next_unused_id_.fetch_add(1);
+  auto id = next_obj_id_.fetch_add(1);
   if (id >= kChunkSize) {
     const std::lock_guard<std::mutex> lock(id_mutex_);
-    id = next_unused_id_;
+    id = next_obj_id_;
     if (id > kChunkSize) {
       auto seg_size = objects_.size();
       if (current_chunk_id_ + 1 >= seg_size) {
@@ -119,7 +119,7 @@ uint32_t ObjectPool<T>::RefreshChunkIndex() {
         current_chunk_id_++;
       }
       id = 0;
-      next_unused_id_ = 0;
+      next_obj_id_ = 0;
     }
   }
   return id;
@@ -132,12 +132,12 @@ void ObjectPool<T>::Serialize(File& file, bool with_boi) const {
     file.Write(ISerializable::kDefaultBoi);
   }
 
-  size_t total_num = kChunkSize * (objects_.size() - 1) + next_unused_id_;
+  size_t total_num = kChunkSize * (objects_.size() - 1) + next_obj_id_;
   file.Write(total_num);
   file.Write(kChunkSize);
 
   for (const auto& chunk : objects_) {
-    size_t num = (chunk == objects_.back() ? next_unused_id_.load() : kChunkSize);
+    size_t num = (chunk == objects_.back() ? next_obj_id_.load() : kChunkSize);
     for (size_t i = 0; i < num; i++) {
       chunk[i].Serialize(file, false);
     }
@@ -179,8 +179,8 @@ void ObjectPool<T>::Deserialize(File& file, endian::Endianness endianness) {
     if (current_chunk_id_ + 1 == chunks) {
       curr_num = total_num % kChunkSize;
     }
-    for (next_unused_id_ = 0; next_unused_id_ < curr_num; next_unused_id_++) {
-      chunk[next_unused_id_].Deserialize(file, endianness);
+    for (next_obj_id_ = 0; next_obj_id_ < curr_num; next_obj_id_++) {
+      chunk[next_obj_id_].Deserialize(file, endianness);
     }
   }
 }

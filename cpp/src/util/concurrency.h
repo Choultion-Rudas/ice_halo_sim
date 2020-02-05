@@ -45,6 +45,24 @@ class ThreadingPool {
   static const unsigned int kHardwareConcurrency;
 };
 
+
+template <typename T>
+class ConcurrentIterativeBuffer {
+ public:
+  ConcurrentIterativeBuffer();
+  ~ConcurrentIterativeBuffer();
+
+ private:
+  uint32_t RefreshChunkIndex();
+
+  static constexpr uint32_t kChunkSize = 1024 * 1024;
+
+  std::vector<T*> obj_chunk_list_;
+  size_t current_chunk_id_;
+  std::atomic<uint32_t> next_obj_id_;
+  std::mutex id_mutex_;
+};
+
 }  // namespace icehalo
 
 

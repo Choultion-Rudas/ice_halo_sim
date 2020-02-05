@@ -7,7 +7,7 @@
 
 #include "context/context.h"
 #include "core/mymath.h"
-#include "util/threadingpool.h"
+#include "util/concurrency.h"
 
 namespace icehalo {
 

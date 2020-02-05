@@ -66,7 +66,7 @@ class ObjectPool : public ISerializable {
 
   std::vector<T*> objects_;
   uint32_t current_chunk_id_;
-  std::atomic<uint32_t> next_unused_id_;
+  std::atomic<uint32_t> next_obj_id_;
   std::mutex id_mutex_;
   size_t deserialized_chunk_size_;
 };

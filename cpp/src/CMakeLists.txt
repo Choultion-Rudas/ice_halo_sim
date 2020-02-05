@@ -35,8 +35,8 @@ set(SOURCE_FILE
     core/render.cpp
     core/simulation.cpp
     io/file.cpp
-    util/obj_pool.cpp
-    util/threadingpool.cpp)
+    util/concurrency.cpp
+    util/obj_pool.cpp)
 
 add_executable(IceHaloSim trace_main.cpp ${SOURCE_FILE})
 target_include_directories(IceHaloSim

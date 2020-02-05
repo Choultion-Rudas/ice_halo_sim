@@ -1,4 +1,4 @@
-#include "util/threadingpool.h"
+#include "util/concurrency.h"
 
 namespace icehalo {
 

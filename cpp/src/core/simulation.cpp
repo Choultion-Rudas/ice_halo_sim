@@ -5,8 +5,8 @@
 #include <utility>
 
 #include "core/mymath.h"
+#include "util/concurrency.h"
 #include "util/obj_pool.h"
-#include "util/threadingpool.h"
 
 namespace icehalo {
 
